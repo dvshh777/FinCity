@@ -12,6 +12,17 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet" />
+
+    <!-- PWA: lets "Add to Home Screen" install FinCity as a standalone app -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#0c0a09" />
+    <link rel="icon" href="/icons/icon-512.png" type="image/png" />
+
+    <!-- iOS ignores the web manifest for home-screen icons/standalone mode; needs its own tags -->
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="FinCity" />
   </head>
   <body class="bg-stone-950 text-stone-100 font-['Plus_Jakarta_Sans',sans-serif] antialiased selection:bg-emerald-500 selection:text-white">
     <div id="root"></div>
