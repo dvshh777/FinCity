@@ -1,0 +1,19 @@
+{
+  "schemas": {
+    "users": {
+      "documentId": "uid (from Firebase Auth)",
+      "fields": {
+        "email": "string",
+        "username": "string",
+        "createdAt": "timestamp"
+      }
+    },
+    "userState": {
+      "documentId": "uid (from Firebase Auth)",
+      "fields": {
+        "state": "object",
+        "updatedAt": "timestamp"
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "FinCity - Save Today. Build Tomorrow",
+  "description": "Gamified financial savings and budgeting platform where saving money builds your vibrant 3D isometric city. Complete with onboarding flow, 50/30/20 budget planner, quests, squad collaboration, and interactive city simulation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
