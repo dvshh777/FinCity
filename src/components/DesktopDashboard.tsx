@@ -27,6 +27,7 @@ import {
   ShieldAlert,
   PlusCircle,
   ChevronRight,
+  BookOpen,
 } from 'lucide-react';
 import { UserState, DesktopNav, BuildingPlot, Transaction, FriendInvitation } from '../types';
 import {
@@ -65,6 +66,7 @@ interface DesktopDashboardProps {
   onCompleteQuest: (questId: string) => void;
   onSwitchToMobile: () => void;
   onMissDay?: () => void;
+  onOpenPatterns?: () => void;
   onAddFriend?: (cityId: string) => { success: boolean; message: string; invitation?: FriendInvitation };
   onAcceptInvitation?: (invitationId: string) => void;
   onDeclineInvitation?: (invitationId: string) => void;
@@ -81,6 +83,7 @@ export const DesktopDashboard: React.FC<DesktopDashboardProps> = ({
   onCompleteQuest,
   onSwitchToMobile,
   onMissDay,
+  onOpenPatterns,
   onAddFriend,
   onAcceptInvitation,
   onDeclineInvitation,
@@ -269,6 +272,18 @@ export const DesktopDashboard: React.FC<DesktopDashboardProps> = ({
 
           {/* Right Header Status Badges */}
           <div className="flex items-center gap-4">
+            {/* Design Patterns & Heuristics */}
+            {onOpenPatterns && (
+              <button
+                onClick={onOpenPatterns}
+                className="px-3 py-1.5 rounded-xl bg-stone-800 border border-stone-700 text-xs font-bold text-emerald-400 hover:bg-stone-700 transition-all flex items-center gap-1.5"
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                <span className="hidden lg:inline">Design Patterns & Heuristics</span>
+                <span className="lg:hidden">Patterns</span>
+              </button>
+            )}
+
             {/* Quick Miss Day Prototype */}
             {onMissDay && (
               <button

@@ -104,8 +104,8 @@ export const FloatingIslandMap: React.FC<FloatingIslandMapProps> = ({
       icon: Lightbulb,
       unlocked: true,
       requiredLevel: 1,
-      xPercent: isMobile ? 26 : 17,
-      yPercent: isMobile ? 28 : 25,
+      xPercent: isMobile ? 26 : 59,
+      yPercent: isMobile ? 28 : 32,
       description:
         'The welcoming gateway of FinCity. Master essential budgeting foundations, set your primary safety buffer, and establish your first architectural residence.',
       perks: ['Unlock 50/30/20 budget framework', 'Daily streak bonus multiplier', 'Foundation house plot'],
@@ -124,8 +124,8 @@ export const FloatingIslandMap: React.FC<FloatingIslandMapProps> = ({
       icon: BookOpen,
       unlocked: true,
       requiredLevel: 1,
-      xPercent: isMobile ? 48 : 41,
-      yPercent: isMobile ? 32 : 28,
+      xPercent: isMobile ? 48 : 46,
+      yPercent: isMobile ? 32 : 24,
       description:
         'Interactive financial literacy academy. Learn compound interest formulas, emergency fund scaling, inflation hedging, and smart tax-saving frameworks.',
       perks: ['Interactive financial calculator', 'Daily knowledge quiz bonus', 'Smart budgeting lessons'],
@@ -143,8 +143,8 @@ export const FloatingIslandMap: React.FC<FloatingIslandMapProps> = ({
       icon: Zap,
       unlocked: true,
       requiredLevel: 2,
-      xPercent: isMobile ? 22 : 15,
-      yPercent: isMobile ? 54 : 50,
+      xPercent: isMobile ? 22 : 24,
+      yPercent: isMobile ? 54 : 40,
       description:
         'High-energy savings colosseum where you challenge your spending habits with 30-day no-spend sprints, round-up micro-savings, and weekly savings duels.',
       perks: ['30-day savings challenge tracker', 'Round-up savings simulator', 'Squad leaderboard rank'],
@@ -162,8 +162,8 @@ export const FloatingIslandMap: React.FC<FloatingIslandMapProps> = ({
       icon: Target,
       unlocked: true,
       requiredLevel: 2,
-      xPercent: isMobile ? 52 : 44,
-      yPercent: isMobile ? 58 : 56,
+      xPercent: isMobile ? 52 : 51,
+      yPercent: isMobile ? 58 : 59,
       description:
         'Architectural project center for tracking your real-life milestones: Dream House, Emergency Shield, Tech Gadgets, and Vacation retreats.',
       perks: ['Milestone visual progress bars', 'Automated recurring savings plans', 'Custom goal blueprints'],

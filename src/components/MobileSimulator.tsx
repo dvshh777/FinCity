@@ -1,6 +1,5 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { RotateCcw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ScreenStep, MobileTab, UserState, FriendInvitation } from '../types';
 import {
   SplashScreen,
@@ -120,76 +119,10 @@ export const MobileSimulator: React.FC<MobileSimulatorProps> = ({
     }
   };
 
-  const stepLabels: Record<ScreenStep, string> = {
-    1: '1. Splash Screen',
-    2: '2. Choose Guide (6 Types)',
-    3: '3. Ask Name',
-    4: '4. Signup',
-    5: '5. Age & Occupation',
-    6: '6. Income / Pocket Money',
-    7: '7. Budget (Auto Savings)',
-    8: '8. Savings Goal',
-    9: '9. User ID',
-    10: '10. Empty City',
-    11: '11. First Save Prompt',
-    12: '12. Building Animation',
-    13: '13. First House Completed',
-    14: '14. Dashboard (After)',
-  };
-
   return (
     <div className="flex flex-col items-center justify-start w-full h-[calc(100vh-60px)] sm:h-[820px] sm:max-h-[92vh] select-none p-0 sm:p-2">
       {/* Sleek Mobile Viewport Container */}
       <div className="relative w-full max-w-[430px] h-full flex flex-col bg-stone-950 text-white sm:rounded-2xl border-stone-800/80 sm:border shadow-2xl overflow-hidden">
-        {/* Top Floating Step Selector Navigator */}
-        <div className="flex items-center justify-between gap-2 bg-stone-900/95 border-b border-stone-800/80 px-3 py-1.5 shadow-md text-xs z-30 shrink-0">
-          <button
-            onClick={() => onChangeStep(Math.max(1, currentStep - 1) as ScreenStep)}
-            disabled={currentStep === 1}
-            className="p-1 rounded-lg hover:bg-stone-800 disabled:opacity-30 text-stone-300 disabled:cursor-not-allowed cursor-pointer"
-            title="Previous Step"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-
-          {/* Step Selector Dropdown */}
-          <div className="flex items-center gap-1.5 font-bold text-stone-200 min-w-0">
-            <span className="text-emerald-400 font-mono text-[11px] shrink-0">
-              Step {currentStep}/14:
-            </span>
-            <select
-              value={currentStep}
-              onChange={(e) => onChangeStep(Number(e.target.value) as ScreenStep)}
-              className="bg-stone-800 text-stone-200 py-0.5 px-2 rounded-lg border border-stone-700 outline-none font-medium cursor-pointer text-[11px] truncate max-w-[140px] sm:max-w-[180px]"
-            >
-              {Object.entries(stepLabels).map(([stepNum, label]) => (
-                <option key={stepNum} value={stepNum}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-center gap-1 shrink-0">
-            <button
-              onClick={() => onChangeStep(Math.min(14, currentStep + 1) as ScreenStep)}
-              disabled={currentStep === 14}
-              className="p-1 rounded-lg hover:bg-stone-800 disabled:opacity-30 text-stone-300 disabled:cursor-not-allowed cursor-pointer"
-              title="Next Step"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-
-            <button
-              onClick={onResetTour}
-              className="p-1 text-stone-400 hover:text-emerald-400 font-medium transition-colors cursor-pointer"
-              title="Reset Flow to Screen 1"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </div>
-
         {/* Screen Content Wrapper */}
         <div className="relative w-full flex-1 overflow-hidden flex flex-col bg-stone-950">
           <AnimatePresence mode="wait">
