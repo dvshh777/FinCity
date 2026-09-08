@@ -626,112 +626,110 @@ export const FloatingIslandMap: React.FC<FloatingIslandMapProps> = ({
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
-              className="relative w-full max-w-lg bg-stone-900 border border-stone-700 rounded-3xl p-5 sm:p-6 shadow-2xl text-white overflow-hidden max-h-[85vh] flex flex-col justify-between"
+              className="relative w-full max-w-lg bg-stone-900 border border-stone-700 rounded-3xl p-4 sm:p-6 shadow-2xl text-white overflow-hidden max-h-[85vh] flex flex-col"
             >
               {/* Modal Header */}
-              <div>
-                <div className="flex items-center justify-between pb-3 border-b border-stone-800">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-stone-950 flex items-center justify-center font-black shadow-md">
-                      {selectedDistrict.unlocked ? (
-                        <selectedDistrict.icon className="w-5 h-5 text-stone-950" />
-                      ) : (
-                        <Lock className="w-5 h-5 text-stone-950" />
-                      )}
-                    </div>
-                    <div>
-                      <span className="text-[10px] uppercase tracking-wider font-bold text-emerald-400">
-                        {selectedDistrict.category}
-                      </span>
-                      <h3 className="text-lg sm:text-xl font-bold font-['Outfit',sans-serif] text-white leading-tight">
-                        {selectedDistrict.number}. {selectedDistrict.name}
-                      </h3>
-                    </div>
+              <div className="flex items-center justify-between pb-3 border-b border-stone-800 shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-stone-950 flex items-center justify-center font-black shadow-md shrink-0">
+                    {selectedDistrict.unlocked ? (
+                      <selectedDistrict.icon className="w-5 h-5 text-stone-950" />
+                    ) : (
+                      <Lock className="w-5 h-5 text-stone-950" />
+                    )}
                   </div>
-
-                  <button
-                    onClick={() => setSelectedDistrict(null)}
-                    className="p-1.5 rounded-full bg-stone-800 hover:bg-stone-700 text-stone-400 hover:text-white transition-colors cursor-pointer"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
+                  <div>
+                    <span className="text-[10px] uppercase tracking-wider font-bold text-emerald-400">
+                      {selectedDistrict.category}
+                    </span>
+                    <h3 className="text-lg sm:text-xl font-bold font-['Outfit',sans-serif] text-white leading-tight">
+                      {selectedDistrict.number}. {selectedDistrict.name}
+                    </h3>
+                  </div>
                 </div>
 
-                {/* District Overview & Status */}
-                <div className="mt-4 space-y-3">
-                  <p className="text-xs sm:text-sm text-stone-300 leading-relaxed">
-                    {selectedDistrict.description}
-                  </p>
+                <button
+                  onClick={() => setSelectedDistrict(null)}
+                  className="p-1.5 rounded-full bg-stone-800 hover:bg-stone-700 text-stone-400 hover:text-white transition-colors cursor-pointer shrink-0"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
 
-                  {/* Lock Warning if locked */}
-                  {!selectedDistrict.unlocked && (
-                    <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs flex items-center gap-2.5">
-                      <Lock className="w-4 h-4 text-amber-400 shrink-0" />
-                      <div>
-                        <span className="font-bold">District Locked</span> — Reach{' '}
-                        <span className="font-extrabold text-amber-300">
-                          Level {selectedDistrict.requiredLevel}
-                        </span>{' '}
-                        by saving and completing quests to unlock this zone!
-                      </div>
-                    </div>
-                  )}
+              {/* District Overview & Status (Scrollable content) */}
+              <div className="flex-1 overflow-y-auto py-3 space-y-3 pr-1 text-left min-h-0">
+                <p className="text-xs sm:text-sm text-stone-300 leading-relaxed">
+                  {selectedDistrict.description}
+                </p>
 
-                  {/* Perks & Features */}
-                  <div>
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-stone-400 mb-2">
-                      District Advantages &amp; Perks
-                    </h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {selectedDistrict.perks.map((perk, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-center gap-2 p-2 rounded-xl bg-stone-800/80 border border-stone-700/60 text-xs text-stone-200"
-                        >
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                          <span className="truncate">{perk}</span>
-                        </div>
-                      ))}
+                {/* Lock Warning if locked */}
+                {!selectedDistrict.unlocked && (
+                  <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs flex items-center gap-2.5">
+                    <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+                    <div>
+                      <span className="font-bold">District Locked</span> — Reach{' '}
+                      <span className="font-extrabold text-amber-300">
+                        Level {selectedDistrict.requiredLevel}
+                      </span>{' '}
+                      by saving and completing quests to unlock this zone!
                     </div>
                   </div>
+                )}
 
-                  {/* Active Quests in this District */}
-                  <div>
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-stone-400 mb-2">
-                      District Missions
-                    </h4>
-                    <div className="space-y-2">
-                      {selectedDistrict.tasks.map((task) => (
-                        <div
-                          key={task.id}
-                          className="flex items-center justify-between p-2.5 rounded-xl bg-stone-800/90 border border-stone-700 text-xs"
-                        >
-                          <div className="flex items-center gap-2">
-                            {task.completed ? (
-                              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                            ) : (
-                              <div className="w-4 h-4 rounded-full border border-stone-500 shrink-0" />
-                            )}
-                            <span className={task.completed ? 'text-stone-400 line-through' : 'text-stone-100 font-medium'}>
-                              {task.title}
-                            </span>
-                          </div>
-                          <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 text-[10px] font-bold">
-                            +{task.rewardXp} XP
+                {/* Perks & Features */}
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-stone-400 mb-2">
+                    District Advantages &amp; Perks
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {selectedDistrict.perks.map((perk, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center gap-2 p-2 rounded-xl bg-stone-800/80 border border-stone-700/60 text-xs text-stone-200"
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                        <span className="truncate">{perk}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Active Quests in this District */}
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-stone-400 mb-2">
+                    District Missions
+                  </h4>
+                  <div className="space-y-2">
+                    {selectedDistrict.tasks.map((task) => (
+                      <div
+                        key={task.id}
+                        className="flex items-center justify-between p-2.5 rounded-xl bg-stone-800/90 border border-stone-700 text-xs"
+                      >
+                        <div className="flex items-center gap-2">
+                          {task.completed ? (
+                            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                          ) : (
+                            <div className="w-4 h-4 rounded-full border border-stone-500 shrink-0" />
+                          )}
+                          <span className={task.completed ? 'text-stone-400 line-through' : 'text-stone-100 font-medium'}>
+                            {task.title}
                           </span>
                         </div>
-                      ))}
-                    </div>
+                        <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 text-[10px] font-bold shrink-0">
+                          +{task.rewardXp} XP
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="mt-5 pt-3 border-t border-stone-800 flex items-center justify-between gap-3">
+              <div className="pt-3 border-t border-stone-800 flex items-center justify-between gap-2 sm:gap-3 shrink-0">
                 <button
                   type="button"
                   onClick={() => setSelectedDistrict(null)}
-                  className="py-2.5 px-4 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs font-bold transition-colors cursor-pointer"
+                  className="py-2.5 px-3 sm:px-4 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs font-bold transition-colors cursor-pointer shrink-0"
                 >
                   Close Map
                 </button>
@@ -744,10 +742,10 @@ export const FloatingIslandMap: React.FC<FloatingIslandMapProps> = ({
                         if (onEnterDistrict) onEnterDistrict(selectedDistrict, cityMode, cityMode === 'group' ? selectedGoalId : undefined);
                         setSelectedDistrict(null);
                       }}
-                      className="flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-300 text-stone-950 text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/20 cursor-pointer"
+                      className="flex-1 py-2.5 px-2.5 sm:px-3 rounded-xl bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-300 text-stone-950 text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/20 cursor-pointer"
                     >
-                      <Building className="w-4 h-4" />
-                      <span>Enter Plots Grid</span>
+                      <Building className="w-4 h-4 shrink-0" />
+                      <span className="truncate">Enter Plots</span>
                     </button>
                     <button
                       type="button"
@@ -755,9 +753,9 @@ export const FloatingIslandMap: React.FC<FloatingIslandMapProps> = ({
                         handleDepositAndXp(100);
                         setSelectedDistrict(null);
                       }}
-                      className="py-2.5 px-3 rounded-xl bg-stone-800 hover:bg-stone-700 text-emerald-300 text-xs font-bold flex items-center gap-1 cursor-pointer"
+                      className="py-2.5 px-3 rounded-xl bg-stone-800 hover:bg-stone-700 text-emerald-300 text-xs font-bold flex items-center gap-1 cursor-pointer shrink-0"
                     >
-                      <Coins className="w-3.5 h-3.5" />
+                      <Coins className="w-3.5 h-3.5 shrink-0" />
                       <span>Invest</span>
                     </button>
                   </div>
@@ -766,7 +764,7 @@ export const FloatingIslandMap: React.FC<FloatingIslandMapProps> = ({
                     disabled
                     className="flex-1 py-2.5 px-4 rounded-xl bg-stone-800 text-stone-500 text-xs font-bold flex items-center justify-center gap-2 cursor-not-allowed"
                   >
-                    <Lock className="w-4 h-4" />
+                    <Lock className="w-4 h-4 shrink-0" />
                     <span>Locked until Level {selectedDistrict.requiredLevel}</span>
                   </button>
                 )}

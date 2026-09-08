@@ -138,67 +138,60 @@ export const MobileSimulator: React.FC<MobileSimulatorProps> = ({
   };
 
   return (
-    <div className="flex flex-col items-center justify-center p-4 min-h-[calc(100vh-80px)] select-none">
-      {/* Top Floating Navigator Bar */}
-      <div className="flex items-center gap-3 bg-stone-900/95 border border-stone-800 backdrop-blur-xl px-4 py-2 rounded-2xl shadow-xl mb-4 text-xs z-30">
-        <button
-          onClick={() => onChangeStep(Math.max(1, currentStep - 1) as ScreenStep)}
-          disabled={currentStep === 1}
-          className="p-1 rounded-lg hover:bg-stone-800 disabled:opacity-30 text-stone-300 disabled:cursor-not-allowed"
-          title="Previous Step"
-        >
-          <ChevronLeft className="w-4 h-4" />
-        </button>
-
-        {/* Step Selector Dropdown */}
-        <div className="flex items-center gap-2 font-bold text-stone-200">
-          <span className="text-emerald-400 font-mono">Step {currentStep}/14:</span>
-          <select
-            value={currentStep}
-            onChange={(e) => onChangeStep(Number(e.target.value) as ScreenStep)}
-            className="bg-stone-800 text-stone-200 py-1 px-2.5 rounded-lg border border-stone-700 outline-none font-medium cursor-pointer text-xs"
+    <div className="flex flex-col items-center justify-start w-full h-[calc(100vh-60px)] sm:h-[820px] sm:max-h-[92vh] select-none p-0 sm:p-2">
+      {/* Sleek Mobile Viewport Container */}
+      <div className="relative w-full max-w-[430px] h-full flex flex-col bg-stone-950 text-white sm:rounded-2xl border-stone-800/80 sm:border shadow-2xl overflow-hidden">
+        {/* Top Floating Step Selector Navigator */}
+        <div className="flex items-center justify-between gap-2 bg-stone-900/95 border-b border-stone-800/80 px-3 py-1.5 shadow-md text-xs z-30 shrink-0">
+          <button
+            onClick={() => onChangeStep(Math.max(1, currentStep - 1) as ScreenStep)}
+            disabled={currentStep === 1}
+            className="p-1 rounded-lg hover:bg-stone-800 disabled:opacity-30 text-stone-300 disabled:cursor-not-allowed cursor-pointer"
+            title="Previous Step"
           >
-            {Object.entries(stepLabels).map(([stepNum, label]) => (
-              <option key={stepNum} value={stepNum}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </div>
+            <ChevronLeft className="w-4 h-4" />
+          </button>
 
-        <button
-          onClick={() => onChangeStep(Math.min(14, currentStep + 1) as ScreenStep)}
-          disabled={currentStep === 14}
-          className="p-1 rounded-lg hover:bg-stone-800 disabled:opacity-30 text-stone-300 disabled:cursor-not-allowed"
-          title="Next Step"
-        >
-          <ChevronRight className="w-4 h-4" />
-        </button>
+          {/* Step Selector Dropdown */}
+          <div className="flex items-center gap-1.5 font-bold text-stone-200 min-w-0">
+            <span className="text-emerald-400 font-mono text-[11px] shrink-0">
+              Step {currentStep}/14:
+            </span>
+            <select
+              value={currentStep}
+              onChange={(e) => onChangeStep(Number(e.target.value) as ScreenStep)}
+              className="bg-stone-800 text-stone-200 py-0.5 px-2 rounded-lg border border-stone-700 outline-none font-medium cursor-pointer text-[11px] truncate max-w-[140px] sm:max-w-[180px]"
+            >
+              {Object.entries(stepLabels).map(([stepNum, label]) => (
+                <option key={stepNum} value={stepNum}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <div className="w-[1px] h-4 bg-stone-700 mx-1" />
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              onClick={() => onChangeStep(Math.min(14, currentStep + 1) as ScreenStep)}
+              disabled={currentStep === 14}
+              className="p-1 rounded-lg hover:bg-stone-800 disabled:opacity-30 text-stone-300 disabled:cursor-not-allowed cursor-pointer"
+              title="Next Step"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
 
-        <button
-          onClick={onResetTour}
-          className="flex items-center gap-1 text-stone-400 hover:text-emerald-400 font-medium transition-colors"
-          title="Reset Flow to Screen 1"
-        >
-          <RotateCcw className="w-3.5 h-3.5" />
-          <span>Reset</span>
-        </button>
-      </div>
-
-      {/* Realistic Phone Frame Container */}
-      <div className="relative w-[375px] h-[780px] max-h-[85vh] bg-stone-900 rounded-[50px] p-3 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] border-[6px] border-stone-800 ring-1 ring-white/10 flex flex-col overflow-hidden">
-        {/* Phone Speaker & Dynamic Island */}
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 flex items-center justify-center">
-          <div className="w-24 h-5 bg-black rounded-full flex items-center justify-between px-2.5">
-            <div className="w-2.5 h-2.5 rounded-full bg-stone-900/90" />
-            <div className="w-2 h-2 rounded-full bg-stone-800" />
+            <button
+              onClick={onResetTour}
+              className="p-1 text-stone-400 hover:text-emerald-400 font-medium transition-colors cursor-pointer"
+              title="Reset Flow to Screen 1"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
 
-        {/* Screen Bezel / Inner Content */}
-        <div className="relative w-full h-full bg-stone-950 rounded-[40px] overflow-hidden flex flex-col">
+        {/* Screen Content Wrapper */}
+        <div className="relative w-full flex-1 overflow-hidden flex flex-col bg-stone-950">
           <AnimatePresence mode="wait">
             <motion.div
               key={`${currentStep}-${mobileTab}`}
@@ -206,7 +199,7 @@ export const MobileSimulator: React.FC<MobileSimulatorProps> = ({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="w-full h-full flex flex-col"
+              className="w-full h-full flex flex-col overflow-hidden"
             >
               {/* Screen 1: Splash Screen */}
               {currentStep === 1 && (
