@@ -3,10 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  Smartphone,
-  Monitor,
   BookOpen,
   Sprout,
 } from 'lucide-react';
@@ -20,7 +18,35 @@ import { FloatingAssistantPopup } from './components/FloatingAssistantPopup';
 
 export default function App() {
   // Primary View Mode: 'mobile' (14-step flow simulator) or 'desktop' (full responsive web app)
-  const [viewMode, setViewMode] = useState<'mobile' | 'desktop'>('mobile');
+  // Auto-detected from the current viewport width — no manual switcher, just like a real
+  // web app (desktop) vs a real mobile app (phone) would behave.
+  const getViewModeForWidth = (width: number): 'mobile' | 'desktop' =>
+    width < 768 ? 'mobile' : 'desktop';
+
+  const [viewMode, setViewMode] = useState<'mobile' | 'desktop'>(() =>
+    getViewModeForWidth(typeof window !== 'undefined' ? window.innerWidth : 1024)
+  );
+
+  useEffect(() => {
+    const handleResize = () => {
+      setViewMode(getViewModeForWidth(window.innerWidth));
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Ensure the city has at least 1 building so the desktop view never looks empty
+  useEffect(() => {
+    if (viewMode === 'desktop' && user.buildingsCount === 0) {
+      setUser((prev) => ({
+        ...prev,
+        totalSavings: Math.max(prev.totalSavings, 10),
+        buildingsCount: 1,
+        hearts: Math.max(prev.hearts, 50),
+      }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewMode]);
 
   // Mobile Flow Step (1 to 14)
   const [mobileStep, setMobileStep] = useState<ScreenStep>(1);
@@ -837,76 +863,39 @@ export default function App() {
   return (
     <div className="min-h-screen bg-stone-950 text-stone-100 flex flex-col font-['Plus_Jakarta_Sans',sans-serif]">
       {/* ================================================================= */}
-      {/* TOP GLOBAL BAR: Brand, Mode Switcher, and Design Heuristics      */}
+      {/* TOP GLOBAL BAR: Brand & Design Heuristics (Mobile Flow view only —  */}
+      {/* the Desktop view has its own branded header inside its sidebar)    */}
       {/* ================================================================= */}
-      <header className="h-14 px-4 sm:px-6 bg-stone-900/90 backdrop-blur-xl border-b border-stone-800 flex items-center justify-between z-30 sticky top-0">
-        {/* Brand */}
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-400">
-            <Sprout className="w-4 h-4" />
+      {viewMode === 'mobile' && (
+        <header className="h-14 px-4 sm:px-6 bg-stone-900/90 backdrop-blur-xl border-b border-stone-800 flex items-center justify-between z-30 sticky top-0">
+          {/* Brand */}
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-400">
+              <Sprout className="w-4 h-4" />
+            </div>
+            <div className="flex items-baseline gap-2">
+              <h1 className="text-base font-extrabold font-['Outfit',sans-serif] tracking-tight bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
+                FinCity
+              </h1>
+              <span className="hidden sm:inline-block text-[11px] text-stone-400 font-medium">
+                Save Today. Build Tomorrow. 🍃
+              </span>
+            </div>
           </div>
-          <div className="flex items-baseline gap-2">
-            <h1 className="text-base font-extrabold font-['Outfit',sans-serif] tracking-tight bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
-              FinCity
-            </h1>
-            <span className="hidden sm:inline-block text-[11px] text-stone-400 font-medium">
-              Save Today. Build Tomorrow. 🍃
-            </span>
+
+          {/* Right Info & Design Patterns Button */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <button
+              onClick={() => setShowPatternsModal(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-stone-800 hover:bg-stone-700 border border-stone-700 text-xs font-bold text-emerald-400 transition-colors cursor-pointer"
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              <span className="hidden md:inline">Design Patterns & Heuristics</span>
+              <span className="md:hidden">Patterns</span>
+            </button>
           </div>
-        </div>
-
-        {/* Center Mode Switcher Tabs */}
-        <div className="flex items-center bg-stone-950 p-1 rounded-xl border border-stone-800">
-          <button
-            onClick={() => setViewMode('mobile')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-              viewMode === 'mobile'
-                ? 'bg-emerald-500 text-stone-950 shadow-sm'
-                : 'text-stone-400 hover:text-stone-200'
-            }`}
-          >
-            <Smartphone className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">📱 Mobile Flow (14 Screens)</span>
-            <span className="sm:hidden">Mobile</span>
-          </button>
-
-          <button
-            onClick={() => {
-              // Ensure city has at least 1 building to display rich desktop view
-              if (user.buildingsCount === 0) {
-                setUser((prev) => ({
-                  ...prev,
-                  totalSavings: Math.max(prev.totalSavings, 10),
-                  buildingsCount: 1,
-                  hearts: Math.max(prev.hearts, 50),
-                }));
-              }
-              setViewMode('desktop');
-            }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-              viewMode === 'desktop'
-                ? 'bg-emerald-500 text-stone-950 shadow-sm'
-                : 'text-stone-400 hover:text-stone-200'
-            }`}
-          >
-            <Monitor className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">💻 Web View (Responsive)</span>
-            <span className="sm:hidden">Web View</span>
-          </button>
-        </div>
-
-        {/* Right Info & Design Patterns Button */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          <button
-            onClick={() => setShowPatternsModal(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-stone-800 hover:bg-stone-700 border border-stone-700 text-xs font-bold text-emerald-400 transition-colors cursor-pointer"
-          >
-            <BookOpen className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">Design Patterns & Heuristics</span>
-            <span className="md:hidden">Patterns</span>
-          </button>
-        </div>
-      </header>
+        </header>
+      )}
 
       {/* ================================================================= */}
       {/* MAIN VIEWPORT: Mobile Prototype Flow OR Responsive Web View       */}
@@ -958,6 +947,7 @@ export default function App() {
             onDeclineInvitation={handleDeclineInvitation}
             onSimulateFriendAccept={handleSimulateFriendAccept}
             onMissDay={handleMissDay}
+            onOpenPatterns={() => setShowPatternsModal(true)}
           />
         )}
 
