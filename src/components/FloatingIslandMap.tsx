@@ -31,8 +31,8 @@ import { BuildingStyle } from '../utils/buildingPricing';
 import { NovaGuide } from './NovaGuide';
 
 // Generated Isometric Floating Island Assets
-const DESKTOP_MAP_IMG = '/src/assets/images/fincity_island_map_1788827616963.jpg';
-const MOBILE_MAP_IMG = '/src/assets/images/fincity_mobile_map_1788827631160.jpg';
+import DESKTOP_MAP_IMG from '../assets/images/fincity_island_map_1788827616963.jpg';
+import MOBILE_MAP_IMG from '../assets/images/fincity_mobile_map_1788827631160.jpg';
 
 export interface DistrictInfo {
   id: string;
