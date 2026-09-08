@@ -175,7 +175,7 @@ export const MobileSimulator: React.FC<MobileSimulatorProps> = ({
               {/* Screen 5: Age & Occupation */}
               {currentStep === 5 && (
                 <AgeOccupationScreen
-                  age={user.age || 21}
+                  age={user.age ?? 21}
                   occupation={user.occupation || 'student'}
                   onChangeAge={onChangeAge}
                   onChangeOccupation={onChangeOccupation}
@@ -189,7 +189,7 @@ export const MobileSimulator: React.FC<MobileSimulatorProps> = ({
                 <IncomeScreen
                   occupation={user.occupation || 'student'}
                   pocketMoneyFrequency={user.pocketMoneyFrequency || 'monthly'}
-                  pocketMoneyAmount={user.pocketMoneyAmount || 5000}
+                  pocketMoneyAmount={user.pocketMoneyAmount ?? 5000}
                   monthlyIncome={user.monthlyIncome}
                   onChangePocketMoney={onChangePocketMoney}
                   onChangeIncome={onChangeIncome}
