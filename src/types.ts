@@ -144,11 +144,16 @@ export interface SquadGoal {
   title: string;
   targetAmount: number;
   currentAmount: number;
+  availableBuildFunds?: number; // Group pooled funds for building
   category: string;
   iconName?: string;
   createdAt: string;
   creatorCityId: string;
   members: SquadGoalMemberContribution[];
+  buildings?: BuildingPlot[]; // Group City constructed buildings
+  treesCount?: number; // 0 to 5 max
+  streetLightsCount?: number; // 0 to 5 max
+  groupStreakDays?: number; // Consecutive group savings streak days
 }
 
 export type TransactionType = 'earn' | 'spend' | 'save' | 'deposit' | 'interest' | 'quest_reward';
@@ -238,6 +243,9 @@ export interface UserState {
   buildingsCount: number;
   buildings: BuildingPlot[];
   districtBuildings?: Record<string, BuildingPlot[]>;
+  treesCount?: number; // 0 to 5 max trees grown from streak
+  streetLightsCount?: number; // 0 to 5 max street lights built from streak
+  savingStreakDays?: number; // Consecutive savings streak
   transactions: Transaction[];
   quests: Quest[];
   squad: SquadMember[];

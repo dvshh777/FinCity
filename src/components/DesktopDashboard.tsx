@@ -60,7 +60,7 @@ interface DesktopDashboardProps {
     date?: string;
   }) => void;
   onSelectPlot: (plot: BuildingPlot) => void;
-  onUpgradePlot?: (plotId: string, cost: number, customName?: string, buildingStyle?: BuildingStyle, districtId?: string) => void;
+  onUpgradePlot?: (plotId: string, cost: number, customName?: string, buildingStyle?: BuildingStyle, districtId?: string, squadGoalId?: string) => void;
   onRenamePlot?: (plotId: string, newName: string, districtId?: string) => void;
   onCompleteQuest: (questId: string) => void;
   onSwitchToMobile: () => void;
@@ -88,6 +88,8 @@ export const DesktopDashboard: React.FC<DesktopDashboardProps> = ({
 }) => {
   const [activeNav, setActiveNav] = useState<DesktopNav>('home');
   const [activeDistrictForGrid, setActiveDistrictForGrid] = useState<DistrictInfo | null>(null);
+  const [activeDistrictCityMode, setActiveDistrictCityMode] = useState<'personal' | 'group'>('personal');
+  const [activeDistrictSquadGoalId, setActiveDistrictSquadGoalId] = useState<string | undefined>(undefined);
   const [selectedPlot, setSelectedPlot] = useState<BuildingPlot | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [txFilter, setTxFilter] = useState<'all' | 'earn' | 'spend' | 'save'>('all');
@@ -97,6 +99,12 @@ export const DesktopDashboard: React.FC<DesktopDashboardProps> = ({
   const [selectedStyle, setSelectedStyle] = useState<BuildingStyle>('cottage');
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameInput, setRenameInput] = useState('');
+
+  const activeGroupGoal = user.squadGoals?.find((g) => g.id === activeDistrictSquadGoalId);
+  const isGroupModeGrid = activeDistrictCityMode === 'group' && !!activeGroupGoal;
+  const availableFundsForBuild = isGroupModeGrid
+    ? (activeGroupGoal?.availableBuildFunds ?? 0)
+    : user.availableBuildFunds;
 
   // Keep state in sync with selected plot
   const handlePlotSelect = (plot: BuildingPlot) => {
@@ -117,7 +125,14 @@ export const DesktopDashboard: React.FC<DesktopDashboardProps> = ({
       const activeCfg = getBuildingConfig(selectedStyle || selectedPlot.buildingStyle || selectedPlot);
       const stageCost = typeof cost === 'number' && cost > 0 ? cost : getNextStageCost(selectedPlot, selectedStyle);
       const finalName = customBuildingName.trim() || (selectedPlot.name.startsWith('Available Plot') ? activeCfg.name : selectedPlot.name);
-      onUpgradePlot(selectedPlot.id, stageCost, finalName, selectedStyle, activeDistrictForGrid.id);
+      onUpgradePlot(
+        selectedPlot.id,
+        stageCost,
+        finalName,
+        selectedStyle,
+        activeDistrictForGrid.id,
+        isGroupModeGrid ? activeDistrictSquadGoalId : undefined
+      );
       setSelectedPlot(null);
     }
   };
@@ -317,7 +332,11 @@ export const DesktopDashboard: React.FC<DesktopDashboardProps> = ({
                     onAddSavings={onAddSavings}
                     onUpgradePlot={onUpgradePlot}
                     onCompleteQuest={onCompleteQuest}
-                    onEnterDistrict={(district) => setActiveDistrictForGrid(district)}
+                    onEnterDistrict={(district, mode, squadGoalId) => {
+                      setActiveDistrictForGrid(district);
+                      setActiveDistrictCityMode(mode || 'personal');
+                      setActiveDistrictSquadGoalId(squadGoalId);
+                    }}
                   />
                 ) : (
                   <div className="flex-1 w-full h-full relative flex flex-col">
@@ -330,7 +349,7 @@ export const DesktopDashboard: React.FC<DesktopDashboardProps> = ({
                         ← Back to 3D Archipelago City
                       </button>
                       <span className="text-xs font-bold text-emerald-400">
-                        🏗️ {activeDistrictForGrid.name} Plots Grid
+                        🏗️ {activeDistrictForGrid.name} Plots Grid ({isGroupModeGrid ? `Group: ${activeGroupGoal?.title}` : 'Personal City'})
                       </span>
                     </div>
 
@@ -338,7 +357,11 @@ export const DesktopDashboard: React.FC<DesktopDashboardProps> = ({
                       <IsometricCity
                         mode="full-city"
                         districtId={activeDistrictForGrid.id}
-                        buildings={user.districtBuildings?.[activeDistrictForGrid.id] || INITIAL_BUILDINGS}
+                        buildings={
+                          isGroupModeGrid && activeGroupGoal
+                            ? (activeGroupGoal.buildings || INITIAL_BUILDINGS.map((b) => ({ ...b, id: `group_${activeGroupGoal.id}_${b.id}` })))
+                            : (user.districtBuildings?.[activeDistrictForGrid.id] || user.buildings || INITIAL_BUILDINGS)
+                        }
                         selectedPlotId={selectedPlot?.id}
                         onSelectPlot={handlePlotSelect}
                       />
@@ -830,7 +853,7 @@ export const DesktopDashboard: React.FC<DesktopDashboardProps> = ({
                     </div>
                     <div className="flex justify-between text-xs p-3 rounded-xl bg-stone-800/60 border border-stone-800">
                       <span className="text-stone-400">Build Funds Available</span>
-                      <span className="font-bold text-emerald-400 font-mono">₹{user.availableBuildFunds}</span>
+                      <span className="font-bold text-emerald-400 font-mono">₹{availableFundsForBuild.toLocaleString('en-IN')}</span>
                     </div>
                   </div>
                 </div>
@@ -876,7 +899,7 @@ export const DesktopDashboard: React.FC<DesktopDashboardProps> = ({
                 <div>
                   <button
                     onClick={() => handleUpgradeDesktop(currentStageCost)}
-                    disabled={user.availableBuildFunds < currentStageCost}
+                    disabled={availableFundsForBuild < currentStageCost}
                     className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 text-stone-950 font-extrabold rounded-xl text-xs flex items-center justify-between px-4 transition-all shadow-lg cursor-pointer"
                   >
                     <span className="truncate max-w-[220px]">
@@ -890,12 +913,12 @@ export const DesktopDashboard: React.FC<DesktopDashboardProps> = ({
                       ₹{currentStageCost}
                     </span>
                   </button>
-                  {user.availableBuildFunds < currentStageCost && (
+                  {availableFundsForBuild < currentStageCost && (
                     <button
                       onClick={() => setShowAddModal(true)}
                       className="w-full mt-2 py-2 text-[11px] text-emerald-400 hover:underline font-semibold text-center"
                     >
-                      + Deposit savings (Need ₹{currentStageCost - user.availableBuildFunds} more)
+                      + Deposit savings (Need ₹{currentStageCost - availableFundsForBuild} more)
                     </button>
                   )}
                 </div>

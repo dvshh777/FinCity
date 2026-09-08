@@ -63,7 +63,7 @@ interface MobileSimulatorProps {
     paymentMethod?: string;
     date?: string;
   }) => void;
-  onUpgradePlot: (plotId: string, cost: number, customName?: string, buildingStyle?: 'cottage' | 'bakery' | 'modern' | 'solar' | 'townhall' | 'cyber') => void;
+  onUpgradePlot: (plotId: string, cost: number, customName?: string, buildingStyle?: 'cottage' | 'bakery' | 'modern' | 'solar' | 'townhall' | 'cyber', districtId?: string, squadGoalId?: string) => void;
   onRenamePlot?: (plotId: string, newName: string) => void;
   onCompleteQuest: (questId: string) => void;
   onResetTour: () => void;

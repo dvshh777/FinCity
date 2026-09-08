@@ -236,7 +236,7 @@ interface EmptyCityScreenProps {
   onChangeTab: (tab: MobileTab) => void;
   onPromptFirstSave: () => void;
   onUpdateProfile?: (updates: { name: string; tag: string; monthlyIncome: number; budgetNeeds: number; budgetWants: number; budgetSavings: number; }) => void;
-  onUpgradePlot?: (plotId: string, cost: number, customName?: string, buildingStyle?: BuildingStyle, districtId?: string) => void;
+  onUpgradePlot?: (plotId: string, cost: number, customName?: string, buildingStyle?: BuildingStyle, districtId?: string, squadGoalId?: string) => void;
   onRenamePlot?: (plotId: string, newName: string, districtId?: string) => void;
 }
 
@@ -250,12 +250,20 @@ export const EmptyCityScreen: React.FC<EmptyCityScreenProps> = ({
   onRenamePlot,
 }) => {
   const [activeDistrictForGrid, setActiveDistrictForGrid] = useState<any | null>(null);
+  const [activeDistrictCityMode, setActiveDistrictCityMode] = useState<'personal' | 'group'>('personal');
+  const [activeDistrictSquadGoalId, setActiveDistrictSquadGoalId] = useState<string | undefined>(undefined);
   const [selectedPlot, setSelectedPlot] = useState<BuildingPlot | null>(null);
   const [customBuildingName, setCustomBuildingName] = useState('');
   const [selectedStyle, setSelectedStyle] = useState<BuildingStyle>('cottage');
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameInput, setRenameInput] = useState('');
   const [showDragTip, setShowDragTip] = useState(true);
+
+  const activeGroupGoal = user.squadGoals?.find((g) => g.id === activeDistrictSquadGoalId);
+  const isGroupModeGrid = activeDistrictCityMode === 'group' && !!activeGroupGoal;
+  const availableFundsForBuild = isGroupModeGrid
+    ? (activeGroupGoal?.availableBuildFunds ?? 0)
+    : user.availableBuildFunds;
 
   // Show drag tip popup once for 4 seconds on initial load, then disappear
   useEffect(() => {
@@ -285,7 +293,14 @@ export const EmptyCityScreen: React.FC<EmptyCityScreenProps> = ({
   const handleUpgrade = (cost: number) => {
     if (selectedPlot && onUpgradePlot && activeDistrictForGrid) {
       const finalName = customBuildingName.trim() || (selectedPlot.name.startsWith('Available Plot') ? activeConfig.name : selectedPlot.name);
-      onUpgradePlot(selectedPlot.id, cost, finalName, selectedStyle, activeDistrictForGrid.id);
+      onUpgradePlot(
+        selectedPlot.id,
+        cost,
+        finalName,
+        selectedStyle,
+        activeDistrictForGrid.id,
+        isGroupModeGrid ? activeDistrictSquadGoalId : undefined
+      );
       
       const isFinished = selectedPlot.stage === 2;
       confetti({
@@ -345,7 +360,11 @@ export const EmptyCityScreen: React.FC<EmptyCityScreenProps> = ({
             onAddSavings={(amt, desc) => {
               if (onPromptFirstSave) onPromptFirstSave();
             }}
-            onEnterDistrict={(district) => setActiveDistrictForGrid(district)}
+            onEnterDistrict={(district, mode, squadGoalId) => {
+              setActiveDistrictForGrid(district);
+              setActiveDistrictCityMode(mode || 'personal');
+              setActiveDistrictSquadGoalId(squadGoalId);
+            }}
           />
         ) : (
           <div className="flex-1 w-full h-full relative flex flex-col">
@@ -358,20 +377,24 @@ export const EmptyCityScreen: React.FC<EmptyCityScreenProps> = ({
                 ← Back to 3D World
               </button>
               <span className="text-[11px] font-bold text-emerald-400 truncate max-w-[120px]">
-                🏗️ {activeDistrictForGrid.name}
+                🏗️ {activeDistrictForGrid.name} ({isGroupModeGrid ? `Group: ${activeGroupGoal?.title}` : 'Personal'})
               </span>
             </div>
 
             <div className="absolute top-3 right-3 bg-stone-900/90 px-3.5 py-1.5 rounded-2xl border border-stone-700 shadow-xl backdrop-blur-md z-30 flex flex-col items-center">
               <span className="text-[9px] text-stone-400 font-bold tracking-wider">FUNDS</span>
-              <span className="text-base text-emerald-400 font-extrabold tracking-tight">₹{user.availableBuildFunds}</span>
+              <span className="text-base text-emerald-400 font-extrabold tracking-tight">₹{availableFundsForBuild.toLocaleString('en-IN')}</span>
             </div>
 
             <div className="flex-1 w-full h-full pt-14">
               <IsometricCity 
                 mode="interactive" 
                 districtId={activeDistrictForGrid.id}
-                buildings={user.districtBuildings?.[activeDistrictForGrid.id] || INITIAL_BUILDINGS}
+                buildings={
+                  isGroupModeGrid && activeGroupGoal
+                    ? (activeGroupGoal.buildings || INITIAL_BUILDINGS.map((b) => ({ ...b, id: `group_${activeGroupGoal.id}_${b.id}` })))
+                    : (user.districtBuildings?.[activeDistrictForGrid.id] || user.buildings || INITIAL_BUILDINGS)
+                }
                 selectedPlotId={selectedPlot?.id}
                 onSelectPlot={handleSelectPlot}
               />

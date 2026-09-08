@@ -212,6 +212,8 @@ export default function App() {
     description: string;
     paymentMethod?: string;
     date?: string;
+    squadGoalId?: string;
+    squadGoalTitle?: string;
   }) => {
     setUser((prev) => {
       const isFirstSave = prev.totalSavings === 0 && newTxData.type === 'save';
@@ -238,11 +240,25 @@ export default function App() {
       let updatedBuildings = prev.buildings;
       let newBuildingsCount = prev.buildingsCount;
 
+      let newStreakDays = prev.savingStreakDays || 0;
+      let newTreesCount = prev.treesCount ?? 2;
+      let newStreetLightsCount = prev.streetLightsCount ?? 0;
+
       if (newTxData.type === 'save') {
         newSavings += txAmount;
         newAvailable += txAmount;
         newHearts = 100;
         newExp += isFirstSave ? 50 : 25;
+
+        // Streak & Growth Logic (Personal City)
+        newStreakDays += 1;
+        if (newStreakDays >= 3) {
+          if (newTreesCount < 5) {
+            newTreesCount += 1;
+          } else if (newStreetLightsCount < 5) {
+            newStreetLightsCount += 1;
+          }
+        }
 
         if (isFirstSave) {
           updatedBuildings = prev.buildings.map((b) => {
@@ -263,15 +279,66 @@ export default function App() {
         newExp += 15;
       } else if (newTxData.type === 'spend') {
         newExp += 5;
+
+        // Overspending / Money Wasting Penalty (Personal City Degradation)
+        if (newTreesCount > 0) {
+          newTreesCount -= 1;
+        } else if (newStreetLightsCount > 0) {
+          newStreetLightsCount -= 1;
+        } else {
+          // Remove top layer of a constructed building (stage 3 -> 2 -> 1 -> 0)
+          let degraded = false;
+          updatedBuildings = prev.buildings.map((b) => {
+            if (!degraded && b.stage > 0) {
+              degraded = true;
+              const nextStage = (b.stage - 1) as 0 | 1 | 2 | 3;
+              return {
+                ...b,
+                stage: nextStage,
+                status: nextStage === 0 ? ('locked' as const) : ('constructing' as const),
+              };
+            }
+            return b;
+          });
+        }
       }
 
-      // If squad goal ID is specified, update squad goal member contribution
+      // If squad goal ID is specified, update squad goal member contribution, group streak, trees, and degradation
       let updatedSquadGoals = prev.squadGoals || [];
       if (newTxData.squadGoalId) {
         updatedSquadGoals = updatedSquadGoals.map((sg) => {
           if (sg.id === newTxData.squadGoalId) {
             const hasUser = sg.members.some((m) => m.userId === 'you' || m.cityId === prev.tag);
             let updatedMembers = sg.members;
+            let groupStreak = (sg.groupStreakDays || 0);
+            let groupTrees = sg.treesCount ?? 2;
+            let groupLights = sg.streetLightsCount ?? 0;
+            let groupFunds = (sg.availableBuildFunds || 0);
+            let groupBuildings = sg.buildings || INITIAL_BUILDINGS.map((b) => ({ ...b, id: `group_${sg.id}_${b.id}` }));
+
+            if (newTxData.type === 'save') {
+              groupStreak += 1;
+              groupFunds += txAmount;
+              if (groupStreak >= 3) {
+                if (groupTrees < 5) groupTrees += 1;
+                else if (groupLights < 5) groupLights += 1;
+              }
+            } else if (newTxData.type === 'spend') {
+              if (groupTrees > 0) groupTrees -= 1;
+              else if (groupLights > 0) groupLights -= 1;
+              else {
+                let deg = false;
+                groupBuildings = groupBuildings.map((gb) => {
+                  if (!deg && gb.stage > 0) {
+                    deg = true;
+                    const ns = (gb.stage - 1) as 0 | 1 | 2 | 3;
+                    return { ...gb, stage: ns, status: ns === 0 ? ('locked' as const) : ('constructing' as const) };
+                  }
+                  return gb;
+                });
+              }
+            }
+
             if (hasUser) {
               updatedMembers = sg.members.map((m) => {
                 if (m.userId === 'you' || m.cityId === prev.tag) {
@@ -298,9 +365,15 @@ export default function App() {
                 },
               ];
             }
+
             return {
               ...sg,
               currentAmount: sg.currentAmount + txAmount,
+              availableBuildFunds: groupFunds,
+              groupStreakDays: groupStreak,
+              treesCount: groupTrees,
+              streetLightsCount: groupLights,
+              buildings: groupBuildings,
               members: updatedMembers,
             };
           }
@@ -312,6 +385,9 @@ export default function App() {
         ...prev,
         totalSavings: newSavings,
         availableBuildFunds: newAvailable,
+        savingStreakDays: newStreakDays,
+        treesCount: newTreesCount,
+        streetLightsCount: newStreetLightsCount,
         hearts: newHearts,
         exp: newExp,
         buildings: updatedBuildings,
@@ -434,10 +510,70 @@ export default function App() {
     cost?: number,
     customName?: string,
     buildingStyle?: BuildingStyle,
-    districtId?: string
+    districtId?: string,
+    squadGoalId?: string
   ) => {
     const targetDistrict = districtId || 'orientation_park';
     setUser((prev) => {
+      // If upgrading inside a Group Squad Goal City
+      if (squadGoalId) {
+        const targetGoal = (prev.squadGoals || []).find((g) => g.id === squadGoalId);
+        if (!targetGoal) return prev;
+
+        const groupPlots = targetGoal.buildings || INITIAL_BUILDINGS.map((b) => ({ ...b, id: `group_${squadGoalId}_${b.id}` }));
+        const targetPlot = groupPlots.find((b) => b.id === plotId || b.id.endsWith(plotId));
+        if (!targetPlot || (targetPlot.stage || 0) >= 3) return prev;
+
+        const chosenStyle = buildingStyle || targetPlot.buildingStyle || 'cottage';
+        const actualCost = typeof cost === 'number' && cost > 0
+          ? cost
+          : getNextStageCost(targetPlot, chosenStyle);
+
+        const availableGroupFunds = targetGoal.availableBuildFunds ?? 0;
+        if (availableGroupFunds < actualCost) return prev; // Not enough group funds
+
+        const config = getBuildingConfig(chosenStyle);
+        const updatedGroupPlots = groupPlots.map((b) => {
+          if (b.id === targetPlot.id) {
+            const nextStage = Math.min((b.stage || 0) + 1, 3) as 0 | 1 | 2 | 3;
+            const chosenName =
+              customName && customName.trim().length > 0
+                ? customName.trim()
+                : b.name.startsWith('Available Plot')
+                ? `${config.name}`
+                : b.name;
+
+            return {
+              ...b,
+              stage: nextStage,
+              status: nextStage > 0 ? ('built' as const) : b.status,
+              name: chosenName,
+              buildingStyle: chosenStyle,
+              dailyExp: config.dailyExp,
+              xpValue: config.xpValue,
+            };
+          }
+          return b;
+        });
+
+        const updatedSquadGoals = (prev.squadGoals || []).map((sg) => {
+          if (sg.id === squadGoalId) {
+            return {
+              ...sg,
+              availableBuildFunds: availableGroupFunds - actualCost,
+              buildings: updatedGroupPlots,
+            };
+          }
+          return sg;
+        });
+
+        return {
+          ...prev,
+          squadGoals: updatedSquadGoals,
+        };
+      }
+
+      // Otherwise upgrading in Personal Savings City
       const districtPlots = prev.districtBuildings?.[targetDistrict] || prev.buildings || INITIAL_BUILDINGS;
       const targetPlot = districtPlots.find((b) => b.id === plotId);
       if (!targetPlot || (targetPlot.stage || 0) >= 3) return prev;
@@ -447,7 +583,7 @@ export default function App() {
         ? cost
         : getNextStageCost(targetPlot, chosenStyle);
 
-      if (prev.availableBuildFunds < actualCost) return prev; // Not enough funds
+      if (prev.availableBuildFunds < actualCost) return prev; // Not enough personal funds
 
       let isFinished = false;
       const config = getBuildingConfig(chosenStyle);

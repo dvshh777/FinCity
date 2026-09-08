@@ -27,6 +27,7 @@ import {
   Heart,
 } from 'lucide-react';
 import { UserState, BuildingPlot } from '../types';
+import { BuildingStyle } from '../utils/buildingPricing';
 import { NovaGuide } from './NovaGuide';
 
 // Generated Isometric Floating Island Assets
@@ -52,9 +53,9 @@ export interface DistrictInfo {
 interface FloatingIslandMapProps {
   user: UserState;
   onAddSavings?: (amount: number, desc: string) => void;
-  onUpgradePlot?: (plotId: string, cost: number, customName?: string) => void;
+  onUpgradePlot?: (plotId: string, cost: number, customName?: string, buildingStyle?: BuildingStyle, districtId?: string, squadGoalId?: string) => void;
   onCompleteQuest?: (questId: string) => void;
-  onEnterDistrict?: (district: DistrictInfo) => void;
+  onEnterDistrict?: (district: DistrictInfo, cityMode?: 'personal' | 'group', squadGoalId?: string) => void;
   isMobile?: boolean;
   className?: string;
 }
@@ -73,13 +74,25 @@ export const FloatingIslandMap: React.FC<FloatingIslandMapProps> = ({
   const [showDepositModal, setShowDepositModal] = useState<boolean>(false);
   const [showQuestOverlay, setShowQuestOverlay] = useState<boolean>(false);
 
-  const activeQuestCount = user.quests.filter((q) => !q.completed).length;
+  // Group Savings City & Streak State
+  const [cityMode, setCityMode] = useState<'personal' | 'group'>('personal');
+  const [selectedGoalId, setSelectedGoalId] = useState<string>(user.squadGoals?.[0]?.id || '');
 
-  // Calculate XP and level metrics
+  const activeGroupGoal = user.squadGoals?.find((g) => g.id === selectedGoalId) || user.squadGoals?.[0];
+
+  // Derived Active Metrics based on Personal vs Group City Mode
+  const isGroupMode = cityMode === 'group' && !!activeGroupGoal;
   const currentLevel = user.level || 1;
   const currentExp = user.exp || 120;
-  const nextLevelExp = currentLevel * 150 + 150; // e.g. Level 2 -> 300 XP
+  const nextLevelExp = currentLevel * 150 + 150;
   const xpPercent = Math.min(100, Math.round((currentExp / nextLevelExp) * 100));
+
+  const activeTreesCount = isGroupMode ? (activeGroupGoal?.treesCount ?? 3) : (user.treesCount ?? 2);
+  const activeStreetLightsCount = isGroupMode ? (activeGroupGoal?.streetLightsCount ?? 1) : (user.streetLightsCount ?? 0);
+  const activeStreakDays = isGroupMode ? (activeGroupGoal?.groupStreakDays ?? 5) : (user.savingStreakDays ?? 4);
+  const activeBuildFunds = isGroupMode ? (activeGroupGoal?.availableBuildFunds ?? 4500) : (user.availableBuildFunds ?? 0);
+
+  const activeQuestCount = user.quests.filter((q) => !q.completed).length;
 
   // Define the districts matching the user's reference visual layout
   const districts: DistrictInfo[] = [
@@ -244,47 +257,98 @@ export const FloatingIslandMap: React.FC<FloatingIslandMapProps> = ({
       className={`relative w-full h-full min-h-[520px] bg-slate-950 overflow-hidden select-none flex flex-col justify-between ${className}`}
     >
       {/* FIXED TOP HUD / FINCITY LEVEL BAR */}
-      <div className="absolute top-4 left-4 right-4 z-40 flex items-start justify-between pointer-events-none">
+      <div className="absolute top-3 left-3 z-40 flex items-start justify-between gap-3 pointer-events-none">
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-3.5 sm:p-4 rounded-2xl bg-stone-900/90 backdrop-blur-md border border-stone-700/80 shadow-2xl text-white pointer-events-auto max-w-[280px] sm:max-w-[320px]"
+          className="p-2.5 sm:p-3 rounded-2xl bg-stone-900/90 backdrop-blur-md border border-stone-700/80 shadow-2xl text-white pointer-events-auto max-w-[250px] sm:max-w-[280px] space-y-2"
         >
-          <div className="flex items-center justify-between mb-1">
-            <h1 className="text-xl sm:text-2xl font-black font-['Outfit',sans-serif] tracking-tight bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">
-              FinCity
-            </h1>
-            <span className="text-[10px] sm:text-xs text-stone-400 font-semibold tracking-wide">
-              Smart Wealth
+          {/* Header Title & Compact Mode Switcher */}
+          <div className="flex items-center justify-between gap-2 border-b border-stone-800/80 pb-1.5">
+            <div>
+              <h1 className="text-sm sm:text-base font-black font-['Outfit',sans-serif] tracking-tight bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">
+                FinCity 3D
+              </h1>
+              <p className="text-[9px] text-stone-400 font-medium truncate max-w-[120px]">
+                {isGroupMode ? `🏙️ ${activeGroupGoal?.title}` : '🏢 Personal Savings Empire'}
+              </p>
+            </div>
+
+            {/* City Mode Switcher Pills */}
+            <div className="p-0.5 rounded-lg bg-stone-950 border border-stone-800 flex items-center gap-0.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => setCityMode('personal')}
+                className={`px-2 py-0.5 rounded-md text-[9px] font-bold transition-all cursor-pointer ${
+                  cityMode === 'personal'
+                    ? 'bg-emerald-500 text-stone-950 font-black shadow-sm'
+                    : 'text-stone-400 hover:text-stone-200'
+                }`}
+              >
+                Personal
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setCityMode('group')}
+                className={`px-2 py-0.5 rounded-md text-[9px] font-bold transition-all cursor-pointer ${
+                  cityMode === 'group'
+                    ? 'bg-amber-500 text-stone-950 font-black shadow-sm'
+                    : 'text-stone-400 hover:text-stone-200'
+                }`}
+              >
+                Group
+              </button>
+            </div>
+          </div>
+
+          {/* Group Goal Picker (If Group Mode Selected) */}
+          {cityMode === 'group' && (
+            <div className="space-y-0.5">
+              <select
+                value={selectedGoalId}
+                onChange={(e) => setSelectedGoalId(e.target.value)}
+                className="w-full py-1 px-2 rounded-lg bg-stone-950 border border-amber-500/40 text-[10px] text-amber-300 font-bold outline-none focus:border-amber-400 cursor-pointer"
+              >
+                {(user.squadGoals || []).map((goal) => (
+                  <option key={goal.id} value={goal.id} className="bg-stone-900 text-white">
+                    {goal.title} (₹{goal.currentAmount.toLocaleString('en-IN')})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Stats Bar: Level, Funds, Streak */}
+          <div className="grid grid-cols-2 gap-1.5 text-[10px] font-bold">
+            <div className="p-1 rounded-lg bg-stone-950/60 border border-stone-800/80 flex items-center justify-between px-2">
+              <span className="text-amber-300">⭐ Lv.{currentLevel}</span>
+              <span className="text-amber-400">🔥 {activeStreakDays}d</span>
+            </div>
+            <div className="p-1 rounded-lg bg-emerald-950/40 border border-emerald-500/30 flex items-center justify-between px-2 font-mono">
+              <span className="text-[9px] text-stone-400 font-sans">FUNDS</span>
+              <span className="text-emerald-400 font-extrabold">₹{activeBuildFunds.toLocaleString('en-IN')}</span>
+            </div>
+          </div>
+
+          {/* Streak Greenery Indicators (Trees & Lights Badges) */}
+          <div className="flex items-center justify-between gap-1 text-[9px] font-bold pt-1 border-t border-stone-800/60">
+            <span className="text-emerald-300 bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded-md flex items-center gap-1">
+              🌲 Trees: {activeTreesCount}/5
+            </span>
+            <span className="text-amber-300 bg-amber-950/60 border border-amber-500/30 px-2 py-0.5 rounded-md flex items-center gap-1">
+              🏮 Lights: {activeStreetLightsCount}/5
             </span>
           </div>
 
-          {/* Level & XP Progress */}
-          <div className="mt-2">
-            <div className="flex items-center justify-between text-xs font-bold mb-1.5">
-              <span className="flex items-center gap-1.5 text-amber-300">
-                <span className="text-sm">⭐</span> Level {currentLevel}
-              </span>
-              <span className="text-stone-300 font-mono text-[11px]">
-                {currentExp} / {nextLevelExp} XP
-              </span>
-            </div>
-
-            {/* Progress Track */}
-            <div className="w-full h-2 rounded-full bg-stone-800 border border-stone-700/80 overflow-hidden">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${xpPercent}%` }}
-                transition={{ duration: 1, ease: 'easeOut' }}
-                className="h-full bg-gradient-to-r from-amber-400 via-emerald-400 to-teal-400 rounded-full shadow-sm"
-              />
-            </div>
-          </div>
-
-          {/* Build Funds Pill */}
-          <div className="mt-3 pt-2.5 border-t border-stone-800/80 flex items-center justify-between">
-            <span className="text-[11px] font-bold text-stone-400 tracking-wider">BUILD FUNDS</span>
-            <span className="text-sm font-extrabold text-emerald-400 font-mono">₹{user.availableBuildFunds || 0}</span>
+          {/* XP Progress Track */}
+          <div className="w-full h-1 rounded-full bg-stone-800 overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${xpPercent}%` }}
+              transition={{ duration: 0.8, ease: 'easeOut' }}
+              className="h-full bg-gradient-to-r from-amber-400 via-emerald-400 to-teal-400 rounded-full"
+            />
           </div>
         </motion.div>
 
@@ -382,6 +446,79 @@ export const FloatingIslandMap: React.FC<FloatingIslandMapProps> = ({
             </motion.div>
           );
         })}
+
+        {/* ISOMETRIC TREES & STREET LIGHTS LAYER (Grown from 3-day consecutive saving streak) */}
+        <div className="absolute inset-0 z-25 pointer-events-none">
+          {/* Preset 5 tree coordinates around island parks */}
+          {[
+            { x: 32, y: 36, label: 'Tree 1' },
+            { x: 38, y: 44, label: 'Tree 2' },
+            { x: 20, y: 32, label: 'Tree 3' },
+            { x: 44, y: 38, label: 'Tree 4' },
+            { x: 28, y: 48, label: 'Tree 5' },
+          ].slice(0, activeTreesCount).map((tree, i) => (
+            <motion.div
+              key={`tree_${i}`}
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.6, delay: i * 0.1 }}
+              style={{ left: `${tree.x}%`, top: `${tree.y}%` }}
+              className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group pointer-events-auto cursor-pointer"
+            >
+              <div className="relative">
+                {/* 3D Pine/Lush Tree SVG */}
+                <svg width="36" height="48" viewBox="0 0 36 48" className="filter drop-shadow-md">
+                  {/* Shadow */}
+                  <ellipse cx="18" cy="44" rx="12" ry="4" fill="#020617" opacity="0.5" />
+                  {/* Trunk */}
+                  <rect x="15" y="30" width="6" height="12" rx="1" fill="#78350f" />
+                  {/* Foliage Layers */}
+                  <polygon points="18,2 4,22 32,22" fill="#15803d" />
+                  <polygon points="18,10 6,28 30,28" fill="#16a34a" />
+                  <polygon points="18,18 8,34 28,34" fill="#22c55e" />
+                </svg>
+              </div>
+              <span className="text-[9px] font-black bg-emerald-950/90 text-emerald-300 px-1.5 py-0.5 rounded-md border border-emerald-500/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                Streak Tree #{i + 1}
+              </span>
+            </motion.div>
+          ))}
+
+          {/* Preset 5 streetlight coordinates along island boulevards */}
+          {[
+            { x: 35, y: 28, label: 'Light 1' },
+            { x: 24, y: 40, label: 'Light 2' },
+            { x: 42, y: 32, label: 'Light 3' },
+            { x: 18, y: 46, label: 'Light 4' },
+            { x: 48, y: 42, label: 'Light 5' },
+          ].slice(0, activeStreetLightsCount).map((light, i) => (
+            <motion.div
+              key={`light_${i}`}
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.6, delay: i * 0.1 }}
+              style={{ left: `${light.x}%`, top: `${light.y}%` }}
+              className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group pointer-events-auto cursor-pointer"
+            >
+              <div className="relative">
+                {/* Glowing Lantern/Streetlight SVG */}
+                <svg width="24" height="40" viewBox="0 0 24 40" className="filter drop-shadow-lg">
+                  {/* Glowing Aura Ring */}
+                  <circle cx="12" cy="10" r="10" fill="#fef08a" opacity="0.35" className="animate-pulse" />
+                  {/* Base & Post */}
+                  <line x1="12" y1="36" x2="12" y2="10" stroke="#475569" strokeWidth="2.5" strokeLinecap="round" />
+                  <rect x="8" y="34" width="8" height="3" rx="1" fill="#334155" />
+                  {/* Lantern Head */}
+                  <polygon points="12,2 6,8 18,8" fill="#f59e0b" />
+                  <rect x="7" y="8" width="10" height="7" fill="#fef08a" stroke="#d97706" strokeWidth="0.8" />
+                </svg>
+              </div>
+              <span className="text-[9px] font-black bg-amber-950/90 text-amber-300 px-1.5 py-0.5 rounded-md border border-amber-500/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                Street Light #{i + 1}
+              </span>
+            </motion.div>
+          ))}
+        </div>
 
         {/* INTERACTIVE DISTRICT PINS & LOCK BADGES LAYER (Inside Draggable Canvas) */}
         <div className="absolute inset-0 z-30">
@@ -604,7 +741,7 @@ export const FloatingIslandMap: React.FC<FloatingIslandMapProps> = ({
                     <button
                       type="button"
                       onClick={() => {
-                        if (onEnterDistrict) onEnterDistrict(selectedDistrict);
+                        if (onEnterDistrict) onEnterDistrict(selectedDistrict, cityMode, cityMode === 'group' ? selectedGoalId : undefined);
                         setSelectedDistrict(null);
                       }}
                       className="flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-300 text-stone-950 text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/20 cursor-pointer"
