@@ -188,6 +188,12 @@ FinCity aims to make personal finance more engaging, accessible, and rewarding b
 
 Instead of simply tracking savings through numbers and charts, users can visualize their financial progress through a growing virtual city. Every deposit contributes to construction, every milestone unlocks rewards, and every savings goal brings the city closer to completion.
 
+## 🎥 FinCity Project Demo
+
+Watch the complete demonstration of FinCity:
+
+[▶️ Watch FinCity Demo Video](https://github.com/dvshh777/FinCity/releases/download/v1.0.0/FinCity-DemoVid.mp4)
+
 **Save consistently. Build progressively. Grow your city.**
 
 ---
